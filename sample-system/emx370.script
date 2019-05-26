@@ -1,0 +1,14 @@
+#
+# initialize script to the emVM/370 system
+#
+
+# shared MAINT minidisks
+sharedckdc maint 190 cp_shared/shared_190.ckdc
+sharedckdc maint 19D cp_shared/shared_19D.ckdc
+sharedckdc maint 19E cp_shared/shared_19E.ckdc
+
+# shared GCCCMS minidisks
+sharedckdc gcccms 201 cp_shared/gcccms_201.ckdc
+sharedckdc gcccms 202 cp_shared/gcccms_202.ckdc
+sharedckdc gcccms 491 cp_shared/gcccms_491.ckdc
+

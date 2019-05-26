@@ -1,0 +1,33 @@
+#
+# logon script for user: CMSUSER
+#
+
+# segments
+:segment CMS IPL 33 0 cp_shared/CMS.segment
+:segment CMSSEG 16 3840 cp_shared/CMSSEG.segment
+
+# card reader
+:rdr create
+
+# puncher
+:pun create cp_cmsuser/puncher_output
+
+# printer
+:prt create cp_cmsuser/printer_output
+
+# dasd minidisks
+:dasdshared 190 maint.190
+:dasdshared 19D maint.19D
+:dasdshared 19E maint.19E
+
+# user owned minidisks
+:dasdload 191 cp_cmsuser/cmsuser_191.ckdc
+:dasdload 192 cp_cmsuser/cmsuser_192.ckdc
+:dasdload 193 cp_cmsuser/cmsuser_193.ckdc
+:dasdload 194 cp_cmsuser/cmsuser_194.ckdc
+:dasdload 195 cp_cmsuser/cmsuser_195.ckdc
+
+# initial program load
+:ipl cms
+
+# that's it

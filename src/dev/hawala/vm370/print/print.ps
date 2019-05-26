@@ -1,0 +1,281 @@
+%!PS-Adobe-3.0
+%%Creator: emVM/370
+
+%
+% prologue for Postscript print files created by emVM/370
+%
+% Written by Dr. Hans-Walter Latz, Berlin (Germany), 2016
+% Released to the public domain.
+%
+
+%
+% a print device output routine may only use the routines prt-* defined
+% at the end of the prologue
+% 
+% a print job is created by adding text to this prologue file using
+% invocations of the prt-* routines with valid Postscript data, i.e.
+% strings must be escaped with \xxx tokens by the print device generating
+% the print job.
+%
+% begin the print job:
+%   [ prt-greenbars ]
+%   prt-a4-portrait | prt-a4-landscape
+%
+% write a single line:
+%   (<line-content>) prt-line
+%   [ (<line-content-for-bold-or-overwrite>) prt-line ]
+%   [ (<line-content-for-bold-or-overwrite>) prt-line ]
+%   ...
+%   <n> prt-advance-lines | <n> prt-skip-to-channel
+%
+% switch to a new page:
+%   <n> prt-skip-to-channel
+%
+% terminate the print job
+%   prt-close
+%
+% the print device may add Postscript %% comments at the end of the
+% file, these may be used by other tools (e.g. PDF generation) as
+% metadata, for example: %%Title:
+%
+
+% (internal)
+% conversion cm => point
+/cm { 28.346456 mul } def
+
+% (internal)
+% 2 missing routines (however only 'min' is probably used)
+/min { 2 copy gt { exch } if pop } bind def
+/max { 2 copy lt { exch } if pop } bind def
+
+% (internal)
+% first define:
+% - normal and bold fonts based on global variable 'fontsize'
+% - routines to switch to a specific font
+% then switch to normal font
+%
+% TODO: define character positions beyond ASCII...
+/define-fonts {
+  /fontdef-normal /Courier findfont fontsize scalefont def
+  /fontdef-bold /Courier-Bold findfont fontsize scalefont def
+  /font-normal { fontdef-normal setfont } def
+  /font-bold { fontdef-bold setfont } def
+  font-normal
+} def
+
+% (internal)
+% current status information
+/linecount 0 def
+/toppos 0 def
+/inprintjob false def
+
+% (internal)
+% flag: must we print green background bars to simulate old print paper?
+% (default: no)
+/use-greenbars false def
+
+% (internal)
+% prepare the current (new) page for emVM/370 usage, adding the green bars if requested
+/initpage {
+  setup-page-layout
+  /linecount 0 def
+  /toppos topmargin def
+  use-greenbars {
+	/toppos toppos greentopoffset sub def
+    gsave
+	0.85 1.0 0.85 setrgbcolor
+    maxlines 2 idiv {
+	  newpath
+	  greenleft toppos moveto
+	  greenleft greenwidth add toppos lineto
+	  greenleft greenwidth add toppos lineheight add lineto
+	  greenleft toppos lineheight add lineto
+	  closepath
+	  fill
+	  /toppos toppos lineheight 2 mul sub def
+	} repeat
+	grestore
+	/toppos topmargin def
+  } if
+  leftmargin toppos moveto
+} def
+
+% (internal)
+% move output position to the next line and if the page end is reached, start a new page
+/newline {
+  /linecount linecount 1 add def
+  /toppos toppos lineheight sub def
+  leftmargin toppos moveto
+  linecount maxlines ge {
+    showpage
+	initpage
+  } if
+} def
+
+% (internal)
+% (write a string in the line sequence, for debugging purposes only) 
+/printline {
+  show
+  newline
+} def
+
+% (internal)
+% setup the 3 line buffers used to accumulate the line content (plain, bold, overwrite)
+/reset-lines {
+  % current normal line
+  /line-normal () def
+  % current bold line
+  /line-bold maxlinelength string def
+  /line-bold-used false def
+  % current other overprint line
+  /line-over maxlinelength string def
+  /line-over-used false def
+} def
+
+%
+% items intended to be used by emVM/370 print device routines
+%
+
+% emVM/370 printer: setup print engine for A4 portrait pages
+/prt-a4-portrait {
+  /setup-page-layout {
+    %%PageOrientation: portrait
+    1 dict dup /PageSize [595 842] put setpagedevice
+  } def
+  /leftmargin 1.2 cm def
+  /topmargin 28.4 cm def
+  /maxlines 66 def
+  /maxlinelength 80 def
+  /fontsize 11 def
+  /lineheight 12 def
+  /greenleft 1.0 cm def
+  /greenwidth 19 cm def
+  /greentopoffset 3 def
+  setup-page-layout
+  define-fonts
+  reset-lines
+  initpage
+} def
+
+% emVM/370 printer: setup print engine for A4 landscape pages
+/prt-a4-landscape {
+  /setup-page-layout {
+    %%PageOrientation: landscape
+    1 dict dup /PageSize [595 842] put dup /Orientation 3 put setpagedevice
+    90 rotate 0 -595 translate
+  } def
+  /leftmargin 2 cm def
+  /topmargin 20.5 cm def
+  /maxlines 66 def
+  /maxlinelength 132 def
+  /fontsize 8.9 def
+  /lineheight 8.8 def
+  /greenleft 1.5 cm def
+  /greenwidth 26.7 cm def
+  /greentopoffset 2 def
+  setup-page-layout
+  define-fonts
+  reset-lines
+  initpage
+} def
+
+% emVM/370 printer: add alternating green line backgrounds to simulate old "endless" paper?
+/prt-greenbars { /use-greenbars true def } def
+
+% emVM/370 printer: add a line
+/prt-line {
+  % save first parameter in variable
+  /line-curr exch def
+  % do we already have text in our lines?
+  line-normal length 0 eq {
+    % (then) line-normal is empty :: we start a new line combination
+	% ... limit length of new line
+	line-curr length maxlinelength gt {
+	  /line-curr line-curr 0 maxlinelength getinterval def
+	} if
+	% ... put new line into current line
+	/line-normal maxlinelength string def
+	line-normal 0 line-curr putinterval
+  } {
+    % (else) line-normal already has content :: extend the combination
+	0 1 line-curr length maxlinelength min 1 sub { % for
+	  % ... save loop index
+	  /line-pos exch def
+	  % ... get new char at loop index
+	  /line-curr-char line-curr line-pos get def
+	  % ... if the new char is a visible char
+	  line-curr-char 32 ne {
+	    % ... get current char at loop index
+	    /line-normal-char line-normal line-pos get def
+	    % ... if same => bold else => overwrite if current not blank
+	    line-curr-char line-normal-char eq {
+	      % ... ... remove char from normal line and insert into bold line
+	      line-bold line-pos line-curr-char put
+		  line-normal line-pos 32 put
+		  /line-bold-used true def
+	    } {
+	      % ... ... if normal line has a blank, then move char to normal line, else to overwrite line
+	      line-normal-char 32 eq {
+		    line-normal line-pos line-curr-char put
+		  } {
+		    line-over line-pos line-curr-char put
+			/line-over-used true def
+		  } ifelse
+	    } ifelse
+	  } if
+	} for
+  } ifelse
+} def
+
+% emVM/370 printer: write out current line, advance by lines and prepare for processing the next line
+% parameter(s): numberOfLines
+/prt-advance-lines {
+  line-normal length 0 gt {
+    leftmargin toppos moveto
+	line-normal show
+    line-over-used {
+	  leftmargin toppos moveto
+	  line-over show
+	} if
+	line-bold-used {
+	  font-bold
+      leftmargin toppos moveto
+	  line-bold show
+      font-normal
+	} if
+  } if
+  reset-lines
+  { newline } repeat
+  /inprintjob true def
+} def
+
+% emVM/370 printer: advance to the next page and and skip the specified number of lines on this new page
+% parameter(s): linesToAdvance
+/prt-skip-to-channel {
+  % print out current line data if any
+  line-normal length 0 gt {
+    0 prt-advance-lines
+  } if
+  % if not the first call at all (i.e. the print job was already started): start a new page
+  inprintjob {
+    showpage
+    initpage
+  } if
+  % advance to the line requested, limited to maxlines
+  maxlines 1 sub min /linecount exch def
+  linecount lineheight mul topmargin exch sub /toppos exch def
+} def
+
+% emVM/370 printer: output last page to close the print job
+/prt-close {
+  line-normal length 0 gt {
+    0 prt-advance-lines
+	/linecount linecount 1 add def
+  } if
+  linecount 0 gt { showpage } if
+} def
+
+%
+% start of print job content...
+%
+
