@@ -3454,7 +3454,6 @@ public class Cpu370BcLambda4 extends Cpu370Bc {
 	// LRER - LOAD ROUNDED (long to short)
 	private int x35_LRER(int at, byte ib2, boolean updPSW) throws PSWException {
 		return this.fpRR(ib2, updPSW, (oldCC, f1, f2, allowUnderflow, allowSignificance) -> {
-					f1.halveFrom(f2);
 					f1.roundToShort();
 					return FloatImpl.generateResult(oldCC, f1, allowUnderflow, false);
 				});

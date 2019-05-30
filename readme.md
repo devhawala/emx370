@@ -10,10 +10,10 @@ IPL and run programs.
 
 Such a virtual machine consists of:
 
-- a S/370 CPU, simplified for running in BC mode without DAT and Control Registers; this CPU implements
+- a S/370 CPU, simplified for running in BC mode without DAT and Control Registers; this CPU implements almost
 all problem state instructions as defined by S/370 PrincOps of 1975 (chapters _General Instructions_, 
-_Decimal Instructions_, _Floating-Point Instructions_) along with some privileged instructions
-used by CMS (mainly SIO and friends)
+_Decimal Instructions_, _Floating-Point Instructions_, except _extended_ floating-point instructions) along
+with some privileged instructions used by CMS (mainly SIO and friends)
 - 16 MBytes main Memory
 - a command console either in 3215 mode (if connected to a plain telnet terminal) or 3270 mode (if connected to a
 3270 terminal emulation) 

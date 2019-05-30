@@ -611,7 +611,6 @@ public class FloatImpl {
 
 		case (byte)0x35: {
 			/* LRER - LOAD ROUNDED (long to short) */
-			f1.halveFrom(f2);
 			f1.roundToShort();
 			return generateResult(oldCC, f1, allowUnderflow, false);
 		}

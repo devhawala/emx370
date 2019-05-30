@@ -746,6 +746,7 @@ public abstract class CPCommandInterpreter extends CPCommandInterpreterEmulator 
 	 */
 	
 	private static final String EMSG_LINK_MISSING_PARAM      = "DMKLNK020E OPERAND MISSING OR INVALID";
+	private static final String EMSG_LINK_NOT_FOUND          = "DMKLNK107E %s %03X NOT LINKED; NOT IN CP DIRECTORY";
 	private static final String EMSG_LINK_DUPLICATE_DEV      = "DMKLNK110E %s %03X NOT LINKED; DASD %03X ALREADY DEFINED";
 	
 	private boolean cmdCP_LINK(Tokenizer tokens) {
@@ -774,6 +775,8 @@ public abstract class CPCommandInterpreter extends CPCommandInterpreterEmulator 
 			this.linkSharedDrive(trgCuu, user, srcCuu);
 		} catch(DuplicateDeviceException e) {
 			return this.emsg(EMSG_LINK_DUPLICATE_DEV, user, srcCuu, trgCuu);
+		} catch (CmdError e) {
+			return this.emsg(EMSG_LINK_NOT_FOUND, user, srcCuu);
 		}
 		this.writef("DASD %03X LINKED R/O", trgCuu);
 		

@@ -1367,14 +1367,16 @@ public class CPVirtualMachine {
 	 * clocks and timers
 	 */
 	
-	private boolean doIntervalTimerInterrupts = true;
+	private boolean doIntervalTimerInterruptAtIpl = true; // configured by :TIMERINTR
+	private boolean doNextTimerInterrupts = true;         // valid for next transition from positive to negative at 0x000080
 	
 	public boolean isDoIntervalTimerInterrupts() {
-		return this.doIntervalTimerInterrupts;
+		return this.doIntervalTimerInterruptAtIpl;
 	}
 
 	public void setDoIntervalTimerInterrupts(boolean doIntervalTimerInterrupts) {
-		this.doIntervalTimerInterrupts = doIntervalTimerInterrupts;
+		this.doIntervalTimerInterruptAtIpl = doIntervalTimerInterrupts;
+		this.doNextTimerInterrupts = doIntervalTimerInterrupts;
 	}
 
 	// "now" in nanoseconds, set by getNow() and to be used by all other timer functions in a timer verification run
@@ -1388,36 +1390,31 @@ public class CPVirtualMachine {
 	private final static long NSECS_FOR_INTERVALTIMING = 3333333; // 3,333 ms as nanosecs
 	private long intervalTimerLastUpdate = System.nanoTime();
 	private long intervalTimerNextCheck = System.currentTimeMillis() - 1; // force checking  
-	private boolean intervalTimerLocation80Positive = true; // => next cpu.reset() will set location 80 to 0 => this would get true...
 	private ExternalInterrupt intervalTimerInterruptSource = new ExternalInterrupt((short)0x0080);
-
+	
 	private void checkIntervalTimer() {
 		long intervalElapsed = this.nowInNanosecs - this.intervalTimerLastUpdate;
 		if (intervalElapsed > NSECS_FOR_INTERVALTIMING) {
 			int intervals = (int)(intervalElapsed / NSECS_FOR_INTERVALTIMING);
 			int itimer = this.cpu.peekMainMemInt(ITIMER_LOCATION);
-			itimer -= (intervals * 256); // "the contents of the timer are reduced by one in bit position 23 every 1/300 of a second"
-			this.cpu.pokeMainMem(ITIMER_LOCATION, itimer);
-			this.intervalTimerLastUpdate += intervalElapsed * NSECS_FOR_INTERVALTIMING;
-			this.intervalTimerNextCheck = (this.intervalTimerLastUpdate + NSECS_FOR_INTERVALTIMING) / 1000000; // nsecs -> msecs 
-		}
-		if (this.intervalTimerLocation80Positive) {
-			if (this.cpu.peekMainMemInt(ITIMER_LOCATION) < 0) {
-				if (this.doIntervalTimerInterrupts) {
-					this.intervalTimerInterruptSource.activate();
-					this.cpu.enqueueInterrupt(this.intervalTimerInterruptSource);
-				}
-				this.intervalTimerLocation80Positive = false;
+			int itimerNew = itimer - (intervals * 256); // "the contents of the timer are reduced by one in bit position 23 every 1/300 of a second"
+			this.cpu.pokeMainMem(ITIMER_LOCATION, itimerNew);
+			this.intervalTimerLastUpdate += intervals /*intervalElapsed*/ * NSECS_FOR_INTERVALTIMING;
+			this.intervalTimerNextCheck = (this.intervalTimerLastUpdate + NSECS_FOR_INTERVALTIMING) / 1000000; // nsecs -> msecs
+			
+
+			if (itimer >= 0 && itimerNew < 0 && this.doNextTimerInterrupts) {
+				this.intervalTimerInterruptSource.activate();
+				this.cpu.enqueueInterrupt(this.intervalTimerInterruptSource);
 			}
-		} else if (this.cpu.peekMainMemInt(ITIMER_LOCATION) >= 0) {
-			this.intervalTimerLocation80Positive = true;
+			this.doNextTimerInterrupts = true;
 		}
 	}
 	
 	private void resetIntervalTimer() {
 		this.intervalTimerLastUpdate = System.nanoTime();
-		this.intervalTimerNextCheck = System.currentTimeMillis() - 1;  
-		this.intervalTimerLocation80Positive = true;
+		this.intervalTimerNextCheck = System.currentTimeMillis() - 1;
+		this.doNextTimerInterrupts = this.doIntervalTimerInterruptAtIpl;
 	}
 	
 	// time of day clock (aka TOD)

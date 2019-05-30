@@ -3436,7 +3436,6 @@ public class Cpu370BcLambda2 extends Cpu370Bc {
 	// LRER - LOAD ROUNDED (long to short)
 	private Instr370 x35_LRER = (at, ib2, updPSW) -> this.fpRR(ib2, updPSW,
 		(oldCC, f1, f2, allowUnderflow, allowSignificance) -> {
-			f1.halveFrom(f2);
 			f1.roundToShort();
 			return FloatImpl.generateResult(oldCC, f1, allowUnderflow, false);
 		});

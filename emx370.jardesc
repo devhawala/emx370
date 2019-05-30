@@ -12,6 +12,5 @@
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
         <javaElement handleIdentifier="=emx370/src"/>
-        <file path="/emx370/x3270-mecaff-console.png"/>
     </selectedElements>
 </jardesc>
