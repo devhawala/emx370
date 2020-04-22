@@ -22,6 +22,7 @@ import dev.hawala.vm370.spool.iSpoolDevice;
 import dev.hawala.vm370.vm.device.DeviceHandler;
 import dev.hawala.vm370.vm.machine.DuplicateDeviceException;
 import dev.hawala.vm370.vm.machine.PSWException;
+import be.friedkiwi.vm370.Authentication;
 
 /**
  * Implementation of a subset of CP commands intended to be compatible
@@ -117,6 +118,8 @@ public abstract class CPCommandInterpreter extends CPCommandInterpreterEmulator 
 	private static final String MSG_TRAILING_PARAMS = "Trailing parameters ignored";
 	
 	private static final int RC_OK = 0;
+	private boolean askForPassword = false;
+	private String vmToLoad = "";
 	
 
 	protected boolean executeCPCommand(String line, boolean isSubCP, boolean suppressUnknownCommandMessage) {
@@ -141,6 +144,18 @@ public abstract class CPCommandInterpreter extends CPCommandInterpreterEmulator 
 		Tokenizer tokens = new Tokenizer(line);
 		String cmd = tokens.nextUpper();
 		
+		if (askForPassword) {
+			askForPassword = false;
+			if (Authentication.validateUser(this.vmToLoad, cmd)) {
+				this.writeln("PASSWORD CORRECT");
+				// create the VM and issue the LOGON line
+				this.createUserVm(this.vmToLoad);;
+			} else {
+				this.writeln("INVALID PASSWORD");
+			}
+			return false;
+		}
+		
 		// see what command this is..
 		if ((isToken(cmd, "LOGON", 1) || isToken(cmd, "LOGIN", 4)) && this.vm == null) {			
 			String vmName = tokens.nextUpper();
@@ -151,10 +166,13 @@ public abstract class CPCommandInterpreter extends CPCommandInterpreterEmulator 
 				this.writeln(MSG_TRAILING_PARAMS);
 			}
 			
-			// TODO: ask for password (what to compare??)
-			
-			// create the VM and issue the LOGON line
-			this.createUserVm(vmName);
+			if (Authentication.authenticateUsers()) {
+				askForPassword = true;
+				this.vmToLoad = vmName;
+				this.writeln("ENTER PASSWORD:");
+			} else {
+				this.createUserVm(vmName);
+			}
 			
 			return false;
 		}
