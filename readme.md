@@ -149,11 +149,12 @@ A new session on the emx370 system is started when a new connection is opened to
 Depending on the terminal emulation connecting to this port (tn3270 emulation or plain telnet)
 a 3270 or 3215 console is created which will await the LOGON command for a new virtual machine.
 
-Users (meaning VMs) that can log on are defined by the existence of their logon script in the
-current directory. This means that a user _ABC_ can log on if the file `abc.logonscript` exists,
-emx370 does currently not support a password for users and therefore the LOGON command does not
-ask for a password. Furthermore there are no provisions to prevent concurrent logons for the
-same user.
+Users need to be defined in the `emx370.password` file and then need to have a logonscript
+created in the current directory in the form of `username.logonscript`. Passwords are stored 
+case-insensitive. 
+
+If the `emx370.password` file does not exist, no password validation is carried out. Furthermore 
+there are no provisions to prevent concurrent logons for the same user.
 
 When the logon script is found, the VM is incarnated by executing the commands in the logon script.
 
