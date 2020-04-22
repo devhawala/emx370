@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 
 public class Authentication {
-	private static final String PASSWORD_FILE = "ems370.password";
+	private static final String PASSWORD_FILE = "emx370.password";
 
 	public static boolean validateUser(String username, String password) {
 		username = username.toUpperCase();
